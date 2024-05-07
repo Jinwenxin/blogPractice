@@ -32,7 +32,8 @@ public class AccountController {
     @PostMapping("/login")
     public Result login(@Validated @RequestBody LoginDto loginDto, HttpServletResponse response) {
         User user = userService.getOne(new QueryWrapper<User>().eq("username", loginDto.getUsername()));
-        Assert.notNull(user, "用户不存在");
+        Assert.notNull(user, "用户不存在"); // assert 会抛出异常，没有response，而result.Fail不算异常
+
         if (!user.getPassword().equals(SecureUtil.md5(loginDto.getPassword()))) {
             return Result.fail("密码错误");
         }
@@ -41,8 +42,11 @@ public class AccountController {
         // jwt 返回在header中还是在返回数据中？一般放在header中，延期的时候直接刷新
 
         response.setHeader("Authorization", jwt);
-        response.setHeader("Access-control-Expose-Header", "Authorization");
-
+        response.setHeader("Access-Control-Expose-Headers", "Authorization");
+        response.setHeader("Access-Control-Allow-Origin", "*");
+        response.setHeader("Access-Control-Allow-Credentials", "true");
+        response.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+        response.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
         return Result.succ(MapUtil.builder().put("id", user.getId()).put("username", user.getUsername()).put("avatar",user.getAvatar()).put("email",user.getEmail()).map());
 
     }
